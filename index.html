@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planoautomatico</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('luis.png');
+            background-size: 100%;
+            background-position: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            background: red;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            flex-direction: column;
+            justify-content: center; /* Centraliza verticalmente */
+        }
+        input {
+            margin: 10px 0;
+            padding: 10px;
+            width: 100%; /* 100% da largura do container */
+            box-sizing: border-box; /* Para incluir padding na largura total */
+            font-size: 16px; /* Tamanho da fonte dos inputs */
+        }
+        button {
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color:blue;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%; /* 100% da largura do container */
+            font-size: 16px; /* Tamanho da fonte dos botões */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bem Vindo ao Plano Automatico</h1>
+        <p id="formTitle">Insere o seu email e senha nos campos abaixo e clica em LOGIN</p>
+        <div id="loginForm">
+            <input type="email" id="loginEmail" placeholder="Insira o seu email" required>
+            <input type="password" id="loginPassword" placeholder="Insira a sua senha" required>
+            <button id="loginBtn" onclick="login()">Login</button>
+            <p>Não tem uma conta? </p>
+            <button id="showRegisterBtn" onclick="showRegister()">Cadastre-se</button>
+        </div>
+
+        <div id="registerForm" style="display: none;">
+            <input type="email" id="registerEmail" placeholder="Cria o seu email em formato nome@gmail.com" required>
+            <input type="password" id="registerPassword" placeholder="Cria uma senha  com o minimo 6 caracteres" required>
+            <button id="registerBtn" onclick="register()">Cadastrar</button>
+            <p>Já tem uma conta? </p>
+            <button id="showLoginBtn" onclick="showLogin()">Volta ao Login</button>
+        </div>
+
+        <div id="userInfo"></div>
+    </div>
+
+    <!-- Importando Firebase com módulos -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCjR7ByKvIFDoF61CL5u2SmYjZ2SOqGd4I",
+            authDomain: "planoautomatico.firebaseapp.com",
+            projectId: "planoautomatico",
+            storageBucket: "planoautomatico.appspot.com",
+            messagingSenderId: "474178177133",
+            appId: "1:474178177133:web:452243accf7de0548b9764",
+            measurementId: "G-7GZFKCREKH"
+        };
+
+        // Inicializa o Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        console.log('Firebase inicializado', app);
+
+        // Funções de login e registro
+        window.login = async function() {
+            console.log('Função login chamada');
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                console.log('Login bem-sucedido:', userCredential.user.email);
+                // Limpa os campos
+                document.getElementById('loginEmail').value = '';
+                document.getElementById('loginPassword').value = '';
+                // Redireciona para home.html
+                console.log('Redirecionando para home.html');
+                window.location.href = 'home.html';
+            } catch (error) {
+                console.error('Erro no login:', error);
+                alert('Email ou senha invalido. Verifique e tente novamente. Se esqueceu a senha, comunique o admin pelo 863614176');
+            }
+        }
+
+        window.register = async function() {
+            console.log('Função register chamada');
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                console.log('Usuário cadastrado:', userCredential.user.email);
+                alert('Cadastro feito com sucesso!'); // Mensagem de sucesso
+                resetForms();
+            } catch (error) {
+                console.error('Erro ao cadastrar:', error);
+                alert('O Email já foi cadastrado ou o formato do email esta incorrecto, troca ou siga formato xxxxxxxx@gmail.com');
+            }
+        }
+
+        window.showRegister = function() {
+            console.log('Mostrando formulário de registro');
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('formTitle').innerText = 'Crie um email e senha nos campos abaixo e clica em CADASTRAR';
+        }
+
+        window.showLogin = function() {
+            console.log('Mostrando formulário de login');
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('formTitle').innerText = 'Insere o seu email e senha nos campos abaixo e clica em LOGIN';
+        }
+
+        function resetForms() {
+            console.log('Resetando formulários');
+            document.getElementById('registerEmail').value = '';
+            document.getElementById('registerPassword').value = '';
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('formTitle').innerText = 'Insere o seu email e senha nos campos abaixo e clica em LOGIN';
+        }
+    </script>
+</body>
+</html>
