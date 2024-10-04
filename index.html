@@ -1,77 +1,160 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planoautomatico</title>
+    <title>Plano Automático</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-image: url('luis.png');
-            background-size: 100%;
-            background-position: center;
+            font-family: 'Roboto', sans-serif;
+            background-image: linear-gradient(to right, #4facfe, #00f2fe);
             margin: 0;
-            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            color: #333;
+            padding: 10px;
         }
+
         .container {
-            text-align: center;
-            background: red;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            flex-direction: column;
-            justify-content: center; /* Centraliza verticalmente */
+            max-width: 400px;
+            margin: auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
         }
+
         input {
             margin: 10px 0;
-            padding: 10px;
-            width: 100%; /* 100% da largura do container */
-            box-sizing: border-box; /* Para incluir padding na largura total */
-            font-size: 16px; /* Tamanho da fonte dos inputs */
+            padding: 15px;
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s;
         }
-        button {
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .divider:not(:empty)::before {
+            margin-right: .5em;
+        }
+
+        .divider:not(:empty)::after {
+            margin-left: .5em;
+        }
+
+        .btn-custom {
+            width: 100%;
+            margin-top: 10px;
             padding: 10px;
-            margin: 10px 0;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            background-color:blue;
-            color: #fff;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            width: 100%; /* 100% da largura do container */
-            font-size: 16px; /* Tamanho da fonte dos botões */
+        }
+
+        .error-text {
+            color: red;
+            font-size: 14px;
+            margin-top: -5px;
+            margin-bottom: 10px;
+        }
+
+        #forgotPasswordBtn {
+            margin-top: 10px;
+            text-decoration: none;
+        }
+
+        .mb-4 {
+            color: #404EE5;
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>Bem Vindo ao Plano Automatico</h1>
-        <p id="formTitle">Insere o seu email e senha nos campos abaixo e clica em LOGIN</p>
+
+    <!-- Modal para Recuperação de Senha -->
+    <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="forgotPasswordModalLabel">Recuperar Senha</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="resetEmail" class="form-label">Digite seu email para redefinir a senha:</label>
+                        <input type="email" id="resetEmail" class="form-control" placeholder="Digite seu email" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="sendResetEmailBtn" class="btn btn-primary">Enviar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container text-center">
+        <h2 class="mb-4">Plano Automático</h2>
+        <p id="formTitle">Entrar</p>
+
         <div id="loginForm">
-            <input type="email" id="loginEmail" placeholder="Insira o seu email" required>
-            <input type="password" id="loginPassword" placeholder="Insira a sua senha" required>
-            <button id="loginBtn" onclick="login()">Login</button>
-            <p>Não tem uma conta? </p>
-            <button id="showRegisterBtn" onclick="showRegister()">Cadastre-se</button>
+            <input type="email" class="form-control" id="loginEmail" placeholder="Insira o seu e-mail" required>
+            <p id="loginEmailError" class="error-text" style="display: none;">Por favor, insira um e-mail válido.</p>
+
+            <input type="password" class="form-control" id="loginPassword" placeholder="Insira a sua senha" required>
+            <p id="loginPasswordError" class="error-text" style="display: none;">Por favor, insira sua senha.</p>
+
+            <button id="loginBtn" class="btn btn-primary btn-custom" onclick="login()">Login</button>
+            <button id="googleLoginBtn" class="btn btn-danger btn-custom" onclick="loginWithGoogle()">Login com Google</button>
+            <a id="forgotPasswordBtn" class="btn btn-link text-dark my-link" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Esqueci minha senha</a>
+            <div class="divider">ou</div>
+
+            <button id="showRegisterBtn" class="btn btn-success btn-custom" onclick="showRegister()">Cadastre-se</button>
         </div>
 
         <div id="registerForm" style="display: none;">
-            <input type="email" id="registerEmail" placeholder="Cria o seu email em formato nome@gmail.com" required>
-            <input type="password" id="registerPassword" placeholder="Cria uma senha  com o minimo 6 caracteres" required>
-            <button id="registerBtn" onclick="register()">Cadastrar</button>
-            <p>Já tem uma conta? </p>
-            <button id="showLoginBtn" onclick="showLogin()">Volta ao Login</button>
-        </div>
+            <input type="email" class="form-control" id="registerEmail" placeholder="Crie o seu e-mail" required>
+            <p id="registerEmailError" class="error-text" style="display: none;">Por favor, insira um e-mail válido.</p>
 
-        <div id="userInfo"></div>
+            <input type="password" class="form-control" id="registerPassword" placeholder="Crie uma senha" required>
+            <p id="registerPasswordError" class="error-text" style="display: none;">A senha deve ter no mínimo 6 caracteres.</p>
+
+            <button id="registerBtn" class="btn btn-primary btn-custom" onclick="register()">Cadastrar</button>
+            <button id="googleRegisterBtn" class="btn btn-danger btn-custom" onclick="registerWithGoogle()">Cadastrar com Google</button>
+
+            <div class="divider">ou</div>
+
+            <button id="showLoginBtn" class="btn btn-secondary btn-custom" onclick="showLogin()">Voltar ao Login</button>
+        </div>
     </div>
 
-    <!-- Importando Firebase com módulos -->
+    <!-- Importando Firebase com módulos e Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCjR7ByKvIFDoF61CL5u2SmYjZ2SOqGd4I",
@@ -89,66 +172,131 @@
         console.log('Firebase inicializado', app);
 
         // Funções de login e registro
-        window.login = async function() {
+        window.login = async function () {
             console.log('Função login chamada');
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
 
+            // Limpa as mensagens de erro
+            document.getElementById('loginEmailError').style.display = 'none';
+            document.getElementById('loginPasswordError').style.display = 'none';
+
             try {
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 console.log('Login bem-sucedido:', userCredential.user.email);
-                // Limpa os campos
-                document.getElementById('loginEmail').value = '';
-                document.getElementById('loginPassword').value = '';
-                // Redireciona para home.html
-                console.log('Redirecionando para home.html');
                 window.location.href = 'home.html';
             } catch (error) {
                 console.error('Erro no login:', error);
-                alert('Email ou senha invalido. Verifique e tente novamente. Se esqueceu a senha, comunique o admin pelo 863614176');
+                document.getElementById('loginPasswordError').style.display = 'block';
             }
-        }
+        };
 
-        window.register = async function() {
+        window.register = async function () {
             console.log('Função register chamada');
             const email = document.getElementById('registerEmail').value;
             const password = document.getElementById('registerPassword').value;
 
+            // Limpa as mensagens de erro
+            document.getElementById('registerEmailError').style.display = 'none';
+            document.getElementById('registerPasswordError').style.display = 'none';
+
+            // Validação simples
+            if (password.length < 6) {
+                document.getElementById('registerPasswordError').style.display = 'block';
+                return;
+            }
+
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 console.log('Usuário cadastrado:', userCredential.user.email);
-                alert('Cadastro feito com sucesso!'); // Mensagem de sucesso
+                alert('Cadastro feito com sucesso!');
                 resetForms();
             } catch (error) {
                 console.error('Erro ao cadastrar:', error);
-                alert('O Email já foi cadastrado ou o formato do email esta incorrecto, troca ou siga formato xxxxxxxx@gmail.com');
+                if (error.code === 'auth/email-already-in-use') {
+                    document.getElementById('registerEmailError').style.display = 'block';
+                } else {
+                    alert('Erro desconhecido: ' + error.message);
+                }
             }
-        }
+        };
 
-        window.showRegister = function() {
-            console.log('Mostrando formulário de registro');
+        window.loginWithGoogle = async function () {
+            const provider = new GoogleAuthProvider();
+
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+                console.log('Login com Google bem-sucedido:', user.email);
+                window.location.href = 'home.html';
+            } catch (error) {
+                console.error('Erro ao fazer login com Google:', error);
+                alert('Erro ao fazer login com Google: ' + error.message);
+            }
+        };
+
+        // Função para registro com Google
+        window.registerWithGoogle = async function () {
+            const provider = new GoogleAuthProvider();
+
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+                console.log('Cadastro com Google bem-sucedido:', user.email);
+                alert('Cadastro feito com sucesso!');
+
+                // Redirecionar para a página principal após o cadastro
+                window.location.href = 'home.html';
+            } catch (error) {
+                console.error('Erro ao cadastrar com Google:', error);
+                alert('Erro ao cadastrar com Google: ' + error.message);
+            }
+        };
+
+        window.showRegister = function () {
             document.getElementById('loginForm').style.display = 'none';
             document.getElementById('registerForm').style.display = 'block';
-            document.getElementById('formTitle').innerText = 'Crie um email e senha nos campos abaixo e clica em CADASTRAR';
-        }
+            document.getElementById('formTitle').innerText = 'CADASTRAR-SE';
+        };
 
-        window.showLogin = function() {
-            console.log('Mostrando formulário de login');
+        window.showLogin = function () {
             document.getElementById('registerForm').style.display = 'none';
             document.getElementById('loginForm').style.display = 'block';
-            document.getElementById('formTitle').innerText = 'Insere o seu email e senha nos campos abaixo e clica em LOGIN';
-        }
+            document.getElementById('formTitle').innerText = 'Entrar';
+        };
+
+        // Função de Enviar Email de Recuperação de Senha
+        document.getElementById('sendResetEmailBtn').addEventListener('click', async function () {
+            const email = document.getElementById('resetEmail').value;
+
+            if (email) {
+                try {
+                    await sendPasswordResetEmail(auth, email);
+                    alert('Email de recuperação enviado! Verifique sua caixa de entrada.');
+                    // Fecha a modal após o envio
+                    const forgotPasswordModal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
+                    if (forgotPasswordModal) {
+                        forgotPasswordModal.hide();
+                    }
+                } catch (error) {
+                    alert('Erro ao enviar email de recuperação: ' + error.message);
+                }
+            } else {
+                alert('Por favor, insira seu email para recuperar a senha.');
+            }
+        });
 
         function resetForms() {
-            console.log('Resetando formulários');
             document.getElementById('registerEmail').value = '';
             document.getElementById('registerPassword').value = '';
             document.getElementById('loginEmail').value = '';
             document.getElementById('loginPassword').value = '';
             document.getElementById('registerForm').style.display = 'none';
             document.getElementById('loginForm').style.display = 'block';
-            document.getElementById('formTitle').innerText = 'Insere o seu email e senha nos campos abaixo e clica em LOGIN';
+            document.getElementById('formTitle').innerText = 'Insira o seu e-mail e senha nos campos abaixo e clique em LOGIN';
         }
     </script>
+
 </body>
+
 </html>
