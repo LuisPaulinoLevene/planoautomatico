@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, serverTimestamp, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCjR7ByKvIFDoF61CL5u2SmYjZ2SOqGd4I",
@@ -41,15 +41,21 @@ function formatTime(timestamp) {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-function updateMessages() {
+async function getUserName(email) {
+    const userRef = doc(db, 'users', email.split('@')[0]); // Usa a parte do email antes do @ como ID
+    const userDoc = await getDoc(userRef);
+    return userDoc.exists() ? userDoc.data().name : email.split('@')[0]; // Retorna o nome ou a parte do email
+}
+
+async function updateMessages() {
     const messagesRef = collection(db, "messages");
     const q = query(messagesRef, orderBy("timestamp"));
-    onSnapshot(q, snapshot => {
+    onSnapshot(q, async snapshot => {
         messagesDiv.innerHTML = ""; // Limpa mensagens anteriores
-        snapshot.forEach(doc => {
+        for (const doc of snapshot.docs) {
             const msg = doc.data();
             if (msg.email && msg.text) {
-                const emailPrefix = msg.email.split('@')[0]; // Oculta o domínio
+                const userName = await getUserName(msg.email); // Obtém o nome do usuário
                 const date = msg.timestamp ? formatDate(msg.timestamp) : '';
                 const time = msg.timestamp ? formatTime(msg.timestamp) : '';
 
@@ -57,7 +63,7 @@ function updateMessages() {
                 const msgDiv = document.createElement('div');
                 msgDiv.className = `message ${msg.email === auth.currentUser.email ? 'sent' : 'received'}`;
                 msgDiv.innerHTML = `
-                    <div class="message-user">${emailPrefix}</div>
+                    <div class="message-user">${userName}</div>
                     <div>${msg.text}</div>
                     <div class="message-time">${time}</div>
                     <div class="message-date">${date}</div>
@@ -69,7 +75,7 @@ function updateMessages() {
                     const responseDiv = document.createElement('div');
                     responseDiv.className = 'message response';
                     responseDiv.innerHTML = `
-                        <div class="message-user">${emailPrefix}</div>
+                        <div class="message-user">${userName}</div>
                         <div>${msg.responseText}</div>
                         <div class="message-time">${time}</div>
                         <div class="message-date">${date}</div>
@@ -83,7 +89,7 @@ function updateMessages() {
                     messageInput.focus();
                 };
             }
-        });
+        }
         messagesDiv.scrollTop = messagesDiv.scrollHeight; // Rola para o final
     });
 }
