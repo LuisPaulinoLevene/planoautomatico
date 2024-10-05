@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plano de Aula</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif; /* Define a fonte padrão para o corpo do texto como 'Times New Roman' ou uma fonte serifada genérica se não estiver disponível */
+            margin: 0; /* Remove as margens padrão do corpo */
+            padding: 0; /* Remove o padding padrão do corpo */
+            min-height: 100vh; /* Define a altura mínima do corpo para preencher toda a altura da tela */
+            background-color: white; /* Define a cor de fundo do corpo como branca */
+            display: flex; /* Usa o modelo de layout Flexbox */
+            justify-content: center; /* Centraliza horizontalmente o conteúdo dentro do corpo */
+            align-items: center; /* Centraliza verticalmente o conteúdo dentro do corpo */
+            font-size: 12px; /* Define o tamanho da fonte padrão para o corpo como 12px */
+        }
+
+        .container {
+            width: 100%; /* Define a largura do container como 100% da largura disponível */
+            max-width: 7000px; /* Define a largura máxima do container como 7000px */
+            background: white; /* Define a cor de fundo do container como branca */
+            padding: 5px; /* Define o padding interno do container como 5px */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Adiciona uma sombra sutil ao container */
+            font-size: 13px; /* Define o tamanho da fonte dentro do container como 13px */
+        }
+
+        .container > * {
+            margin-bottom: 9px; /* Define o espaçamento inferior de todos os elementos diretos filhos do container como 9px */
+        }
+
+        h1 {
+            text-align: center; /* Alinha o texto dos elementos h1 ao centro */
+        }
+
+        form {
+            width: 100%; /* Define a largura do formulário como 100% da largura disponível */
+        }
+
+        .input-container > div {
+            margin: 8px 0; /* Define o espaçamento vertical entre divs dentro do container de input como 8px */
+        }
+
+        label {
+            display: block; /* Define os labels como blocos para garantir que eles ocupem toda a largura disponível */
+            margin-bottom: 5px; /* Define o espaçamento abaixo de cada label como 5px */
+        }
+
+        input,
+        select,
+        button {
+            width: 100%; /* Define a largura dos inputs, selects e botões como 100% da largura disponível */
+            box-sizing: border-box; /* Inclui padding e borda no tamanho total do elemento */
+            margin-bottom: 10px; /* Define o espaçamento inferior dos inputs, selects e botões como 10px */
+        }
+
+        button {
+            padding: 10px; /* Define o padding interno dos botões como 10px */
+            background-color: #007BFF; /* Define a cor de fundo dos botões como azul */
+            color: white; /* Define a cor do texto dos botões como branca */
+            border: none; /* Remove a borda dos botões */
+            cursor: pointer; /* Define o cursor como ponteiro quando passa sobre o botão */
+        }
+
+        button:hover {
+            background-color: #0056b3; /* Define a cor de fundo dos botões quando o cursor passa sobre eles */
+        }
+
+        .info-container {
+            display: none; /* Oculta o container de informações */
+            width: 100%; /* Define a largura do container de informações como 100% da largura disponível */
+            margin-bottom: 10px; /* Define o espaçamento inferior do container de informações como 10px */
+            display: flex; /* Usa o modelo de layout Flexbox */
+            justify-content: space-between; /* Distribui o espaço entre os itens filhos do container de informações */
+            flex-wrap: wrap; /* Permite que os itens filhos quebrem para a próxima linha, se necessário */
+        }
+
+        .info-left,
+        .info-right {
+            flex: 1; /* Define que os elementos info-left e info-right crescem igualmente */
+            min-width: 150px; /* Define a largura mínima dos elementos info-left e info-right como 200px */
+            margin: 9px; /* Define o espaçamento externo dos elementos info-left e info-right como 10px */
+        }
+
+        .info-left div,
+        .info-right div {
+            margin-bottom: 9px; /* Define o espaçamento inferior dos divs dentro de info-left e info-right como 10px */
+        }
+
+        .info-left label,
+        .info-right label {
+            font-weight: bold; /* Define o texto dos labels dentro de info-left e info-right como negrito */
+            margin-right: 5px; /* Define o espaçamento à direita dos labels como 5px */
+        }
+
+        .info-left span,
+        .info-right span {
+            display: inline; /* Define que os spans dentro de info-left e info-right devem ser exibidos em linha */
+        }
+
+        .info-right .objective span {
+            display: block; /* Define que o span dentro de info-right com a classe 'objective' deve ser exibido como bloco */
+            margin-top: 5px; /* Define o espaçamento superior do span com a classe 'objective' como 5px */
+        }
+
+        .table-container {
+            display: none; /* Oculta o container da tabela */
+            margin-top: 9px; /* Define o espaçamento superior do container da tabela como 10px */
+            overflow-x: auto; /* Permite rolagem horizontal se o conteúdo da tabela ultrapassar a largura do container */
+        }
+
+        table {
+            width: 100%; /* Define a largura da tabela como 100% da largura disponível */
+            border-collapse: collapse; /* Remove o espaçamento entre as bordas das células da tabela */
+            margin-top: 9px; /* Define o espaçamento superior da tabela como 10px */
+            min-width: 4px; /* Define a largura mínima da tabela como 5px */
+            font-size: 9px; /* Define o tamanho da fonte da tabela como 9px */
+            margin-left: auto; /* Centraliza a tabela horizontalmente */
+            margin-right: auto; /* Centraliza a tabela horizontalmente */
+            border: 1px solid #000; /* Define a borda da tabela como uma linha sólida preta de 1px */
+            line-height: 0.8; /* Define o espaçamento entre linhas da tabela */
+        }
+
+        th,
+        td {
+            border: 1px solid #000; /* Define a borda das células da tabela como uma linha sólida preta de 1px */
+            padding: 8px; /* Define o padding interno das células da tabela como 8px */
+            text-align: center; /* Alinha o texto dentro das células da tabela ao centro */
+            font-size: 13px; /* Define o tamanho da fonte das células da tabela como 8px */
+        }
+
+        th {
+            background-color: white; /* Define a cor de fundo dos cabeçalhos da tabela como branca */
+        }
+
+        .left-align {
+            text-align: left; /* Alinha o texto ao lado esquerdo */
+            font-size: 11px /* Define o tamanho de letras dentro de cada celula, algo para nao esquecer quando a tabela corta pdf. Minnha descoberta*/
+
+        }
+
+        @media (max-width: 768px) {
+            table {
+                font-size: 8px; /* Define o tamanho da fonte da tabela como 8px em telas menores */
+            }
+
+            th,
+            td {
+                padding: 6px; /* Define o padding interno das células da tabela como 6px em telas menores */
+            }
+        }
+
+        textarea {
+            width: 100%; /* Define a largura da área de texto como 100% da largura disponível */
+            box-sizing: border-box; /* Inclui padding e borda no tamanho total da área de texto */
+            padding: 10px; /* Define o padding interno da área de texto como 10px */
+            border: 1px solid #ccc; /* Define a borda da área de texto como uma linha sólida cinza claro de 1px */
+            border-radius: 4px; /* Define o arredondamento dos cantos da área de texto como 4px */
+            font-size: 14px; /* Define o tamanho da fonte da área de texto como 14px */
+            line-height: 1.5; /* Define o espaçamento entre linhas da área de texto como 1.5 */
+            resize: none; /* Desativa a possibilidade de redimensionar a área de texto */
+            overflow: hidden; /* Oculta qualquer conteúdo que exceda o tamanho da área de texto */
+        }
+
+        .output {
+            white-space: pre-wrap; /* Preserva quebras de linha e espaços dentro do elemento com a classe 'output' */
+            border: 1px solid #ccc; /* Define a borda do elemento com a classe 'output' como uma linha sólida cinza claro de 1px */
+            padding: 10px; /* Define o padding interno do elemento com a classe 'output' como 10px */
+            border-radius: 4px; /* Define o arredondamento dos cantos do elemento com a classe 'output' como 4px */
+            font-size: 9px; /* Define o tamanho da fonte do elemento com a classe 'output' como 9px */
+            line-height: 1.5; /* Define o espaçamento entre linhas do elemento com a classe 'output' como 1.5 */
+            background-color: #f9f9f9; /* Define a cor de fundo do elemento com a classe 'output' como um cinza claro */
+            margin-top: 10px; /* Define o espaçamento superior do elemento com a classe 'output' como 10px */
+        }
+
+        /* Estilos específicos para impressão */
+        @media print {
+            body {
+                margin: 0; /* Remove as margens do corpo para a impressão */
+                padding: 0; /* Remove o padding do corpo para a impressão */
+                font-size: 8px; /* Define o tamanho da fonte para o corpo como 8px para impressão */
+            }
+
+            .container {
+                padding: 9px; /* Ajusta o padding interno do container para impressão */
+                box-shadow: none; /* Remove a sombra do container para uma aparência mais limpa na impressão */
+            }
+
+            table {
+                width: 100%; /* Define a largura da tabela como 100% da largura disponível para a impressão */
+                font-size: 9px; /* Define o tamanho da fonte da tabela como 9px para a impressão */
+                border: 1px solid #000; /* Define a borda da tabela como uma linha sólida preta de 1px para a impressão */
+            }
+
+            th,
+            td {
+                padding: 3px; /* Reduz o padding interno das células da tabela para impressão */
+                font-size: 9px; /* Define o tamanho da fonte das células da tabela como 9px para impressão */
+            }
+
+            @page {
+                margin: 10mm; /* Define as margens da página para impressão como 10mm */
+            }
+
+            .no-print {
+                display: none; /* Oculta elementos com a classe 'no-print' na impressão */
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <form id="lessonPlanForm">
+            <div class="input-container">
+                <div>
+<label for="escola">Escola (Obrigatório):</label>
+<input type="text" id="escola" name="escola" placeholder="Escreve o nome da escola" required>
+
+<label for="data">Data (Obrigatorio). Insira a data no formato Data/Mes/Ano. Se caso queira adicionar muitas datas, entao, separa-as por vírgulas, como no exemplo:</label>
+<input type="text" id="data" name="data" placeholder="29/08/2024, 30/08/2024, 02/09/2024 e 05/09/2024" required>
+<label for="nome">Nome (Obrigatório):</label>
+<input type="text" id="nome" name="nome" placeholder="Preencha o nome do professor" required>
+<label for="turma">Turma(s): (Obrigatorio):</label>
+<input type="text" id="turma" name="turma" placeholder="Escreve as turmas. Ex.:A ou A,B ou A01, B01, etc" required>
+<label for="disciplina">Disciplina (Obrigatório):</label>
+<div id="disciplina">
+    <select name="disciplina" required>
+        <option>English</option>
+</div>
+<label for="unidadeTematica">Unidade Temática (Obrigatório):</label>
+<input type="text" id="unidadeTematica" name="unidadeTematica" placeholder="Preencha a unidade tematica" required>
+<label for="tema">Tema (Obrigatorio):</label>
+<input type="text" id="tema" name="tema" placeholder="Preencha o tema da aula" required>
+<label for="subtemas">Subtitulos (Opcional): Escreve todos os subtitulos do seu tema, iniciando cada subtitulo com um ifen ou outros carecteres</label>
+<textarea id="subtemas" name="subtemas" placeholder="Preencha o todos os subtitulos em paragrafos diferentes, caso tenha"></textarea>
+
+<label for="transversal">Tema Tranversal(Opcional):</label>
+<input type="text" id="transversal" name="transversal" placeholder="Preencha o tema transversal, caso queira" required>
+
+                </div>
+                    <label for="objetivoEspecifico">Objetivos Específicos (Obrigatório):</label>
+                    <div id="objetivosContainer">
+                        <input type="text" id="objetivoEspecifico" name="objetivoEspecifico" placeholder="Preencha o primeiro objectivo especifico" required>
+                    </div>
+                    <button type="button" onclick="adicionarObjetivo()">Clica aqui para abrir novo campo para adicionar outro objectivo</button>
+                    <button type="button" onclick="removerObjetivo()">Clica aqui para remover o campo que adicionou</button>
+
+                    <label for="conteudoMediacao">Indica a (s) pagina (s) de apontamentos, como no exemplo. Caso queira colocar em anexo deixa em branco. Nao exceda 10 caracteres):</label>
+                    <input type="text" id="conteudoMediacao" name="conteudoMediacao" placeholder="Ex.: 96; ou 69 a 70" maxlength="10">
+
+                    <label for="conteudoDominio">Indica o(s) numero(s) de execicio(s), alineas (se necessario) e a(s) pagina(s) que se encontra(m) a dar como exercicios escritos, se quer colocar em anexos, Escreva a expressao "Em Anexo", como no formato  do campo, caso nao queira dar perguntas orais, deixa em branco. (Nao exceda 80 caracteres):</label>
+                    <input type="text" id="conteudoDominio" name="conteudoDominio" placeholder="Exercico nº  1. a), b), c); 2. a), b) da pagina xx do livro do aluno" maxlength="80">
+
+                    <label for="conteudoControle">Indica o(s) numero(s) de execicio(s) a dar como TPC e alineas (se necessario). Caso nao queira terminar a aula com TPC, dexa em branco. (Nao exceda 80 caracteres):</label>
+                    <input type="text" id="conteudoControle" name="conteudoControle" maxlength="80">
+
+                    <label for="materialIntroducao">Escreve o material didactico que pretende usar na Introducao e Motivacao, caso nao queira, deixa em branco. (Nao exceda 20 caracteres):</label>
+                    <input type="text" id="materialIntroducao" name="materialIntroducao" placeholder="Ex.: Pauzinhos, cartaz, etc." maxlength="20">
+                    <label for="materialMediacao">Escreve o material didactico que pretende usar na Mediacao e Assimilacao, caso nao queira, deixa em branco. (Nao exceda 20 caracteres):</label>
+                    <input type="text" id="materialMediacao" name="materialMediacao" placeholder="Ex.: Pauzinhos, cartaz, etc." maxlength="20">
+                    <label for="materialDominio">Escreve o material didactico que pretende usar no Dominio e Consolidacao, caso nao queira, deixa em branco. (Nao exceda 20 caracteres):</label>
+                    <input type="text" id="materialDominio" name="materialDominio" placeholder="Ex.: Pauzinhos, cartaz, etc." maxlength="20">
+                    <label for="materialControlo">Escreve o material didactico que pretende usar no Controle e Avaliacao, caso nao queira, deixa em branco. (Nao exceda 20 caracteres):</label>
+                    <input type="text" id="materialControlo" name="materialControlo" placeholder="Ex.: Pauzinhos, cartaz, etc." maxlength="20">
+                    <label for="Obs1">Escreva uma observacao que vai ser anexada na funcao Introducao e Motivacao, caso nao tem observacao, deixa em branco. (Nao exceda 200 caracteres):</label>
+                    <input type="text" id="Obs1" name="Obs1" placeholder="Observacoes para Funcao Introducao e Motivacao" maxlength="200">
+                    <label for="Obs2">Escreva uma observacao que vai ser anexada na funcao Mediacao e Assimilacao, caso nao tem observacao, deixa em branco. (Nao exceda 200 caracteres):</label>
+                    <input type="text" id="Obs2" name="Obs2" placeholder="Observacoes para funcao Mediacao e Assimilacao" maxlength="200">
+                    <label for="Obs3">Escreva uma observacao que vai ser anexada na funcao Dominio e Consolidacao, caso nao tem observacao, deixa em branco. (Nao exceda 200 caracteres):</label>
+                    <input type="text" id="Obs3" name="Obs3" placeholder="Observacoes para Funcao Dominio e Consolidacao" maxlength="200">
+                    <label for="Obs4">Escreva uma observacao que vai ser anexada na funcao Controle e Avaliacao, caso nao tem observacao, deixa em branco. (Nao exceda 200 caracteres):</label>
+                    <input type="text" id="Obs4" name="Obs4" placeholder="Observacoes para Funcao Controle e Avaliacao" maxlength="200">
+                    <label for="tempo">Escreva os tempos lectivos. (Obrigatorio). (Nao exceda 30 caracteres):</label>
+                    <input type="text" id="tempo" name="tempo" placeholder="Ex.: 1º, 2º, etc" maxlength="30" required>
+                    <label for="duracao">Escreva a duracao da aula. (Obrigatorio). (Nao exceda 2 caracteres):</label>
+                    <input type="text" id="duracao" name="duracao" placeholder="Ex.: 45" maxlength="2" required>
+                    <label for="duracao1">Escreva a duracao para a Funcao Introducao e Motivacao. (Obrigatorio). (Nao exceda 2 caracteres):</label>
+                    <input type="text" id="duracao1" name="duracao1" placeholder="Ex.: 5 " maxlength="2" required>
+                    <label for="duracao2">Escreva a duracao para a Funcao Mediacao e Assimilacao. (Obrigatorio). (Nao exceda 2 caracteres):</label>
+                    <input type="text" id="duracao2" name="duracao2" placeholder="Ex.: 20 " maxlength="2" required>
+                    <label for="duracao3">Escreva a duracao para a Funcao Dominnio e Consolidacao. (Obrigatorio). (Nao exceda 2 caracteres):</label>
+                    <input type="text" id="duracao3" name="duracao3" placeholder="Ex.: 15 " maxlength="2" required>
+                    <label for="duracao4">Escreva a duracao para a Funcao Controle e Avaliacao. (Obrigatorio). (Nao exceda 2 caracteres):</label>
+                    <input type="text" id="duracao4" name="duracao4" placeholder="Ex.: 5 " maxlength="2" required>
+                    <label for="tipoDeAula">Escreva o tipo de aula. (Obrigatorio). (Nao exceda 20 caracteres):</label>
+                    <input type="text" id="tipoDeAula" name="tipoDeAula" placeholder="Tipo de aula" maxlength="20" required>
+                </div>
+            <button type="button" onclick="gerarPlano()">Clica aqui para gerar o seu Plano de Aula</button>
+        </form>
+        <div class="info-container" id="infoContainer">
+            <button id="generatePDF" style="display: none;" onclick="document.getElementById('generatePDF').style.display='none'; let filename=prompt('Digite o nome do arquivo:','Plano_de_aula'); if(filename){ document.body.style.lineHeight = 'normal'; html2pdf().set({ margin: 0, filename: filename + '.pdf', html2canvas: { windowHeight: document.body.scrollHeight }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(document.body).toPdf().get('pdf').then(pdf => { const totalPages = pdf.internal.getNumberOfPages(); for (let pageNumber = totalPages; pageNumber > 1; pageNumber--) { pdf.deletePage(pageNumber); } }).save().then(() => { document.getElementById('generatePDF').style.display='block'; document.body.style.lineHeight = ''; }); } else { document.getElementById('generatePDF').style.display='block'; }">Salvar PDF</button>
+
+            <div class="info-left">
+                <div><label></label> <span id="infoEscola"></span></div>
+                <div><label></label> <span id="infoData"></span></div>
+                <div><label></label> <span id="infoNome"></span></div>
+                <div><label></label> <span id="infoDisciplina"></span></div>
+                <div><label></label> <span id="infoUnidadeTematica"></span></div>
+                <div><label></label> <span id="infoTema"></span></div>
+                <div><label></label> <span id="infoTransversal"></span></div>
+
+            </div>
+            <div class="info-right">
+                <div class="objective"><label></label> <span id="infoObjetivoEspecifico"></span></div>
+                <div><label></label> <span id="infoTempo"></span></div>
+                <div><label></label> <span id="infoDuracao"></span></div>
+                <div><label></label> <span id="infoTipoDeAula"></span></div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table id="lessonPlanTable">
+                <thead>
+                    <tr>
+                        <th rowspan="2">Função <br>Didática</th>
+                        <th rowspan="2">Tempo</th>
+                        <th rowspan="2">Conteúdo</th>
+                        <th colspan="2">Atividades</th>
+                        <th rowspan="2">Método</th>
+                        <th rowspan="2">Recursos <br>Didácticos</th>
+                        <th rowspan="2">Observações</th>
+                    </tr>
+                    <tr>
+                        <th>Professor</th>
+                        <th>Alunos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Introdução <br><br>e<br><br> Motivação</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>Mediação <br><br>e<br><br> Assimilação</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>Domínio <br><br>e<br><br>  Consolidação</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>Controle <br><br>e<br><br>  Avaliação</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        function adicionarObjetivo() {
+            const container = document.getElementById('objetivosContainer');
+
+            // Cria um novo input
+            const novoInput = document.createElement('input');
+            novoInput.type = 'text';
+            novoInput.name = 'objetivoEspecifico';
+            novoInput.required = true;
+            novoInput.placeholder = 'Digite um novo objetivo específico';
+
+            // Adiciona o novo input ao container
+            container.appendChild(novoInput);
+        }
+
+        function removerObjetivo() {
+            const container = document.getElementById("objetivosContainer");
+            const inputs = container.getElementsByTagName("input");
+            if (inputs.length > 1) {
+                container.removeChild(inputs[inputs.length - 1]);
+            } else {
+                alert("Desculpa, Você deve remover apenas os campos por si adicionados.");
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            const textareas = document.querySelectorAll('textarea');
+
+            textareas.forEach(textarea => {
+                textarea.addEventListener('input', adjustHeight);
+                textarea.addEventListener('focus', adjustHeight); // Ajusta a altura quando o textarea ganha foco
+                textarea.addEventListener('blur', adjustHeight);  // Ajusta a altura quando o textarea perde foco
+            });
+
+            function adjustHeight(event) {
+                const textarea = event.target;
+                textarea.style.height = 'auto'; // Reseta a altura para calcular o novo valor
+                textarea.style.height = `${textarea.scrollHeight}px`; // Define a altura para o scrollHeight
+            }
+
+            // Ajusta a altura de todos os textareas na carga inicial
+            textareas.forEach(textarea => {
+                adjustHeight({ target: textarea });
+            });
+        });
+        function escaparHTML(texto) {
+            return texto
+                .replace(/&/g, '&amp;')  // Substitui & por &amp;
+                .replace(/</g, '&lt;')   // Substitui < por &lt;
+                .replace(/>/g, '&gt;')   // Substitui > por &gt;
+                .replace(/"/g, '&quot;') // Substitui " por &quot;
+                .replace(/'/g, '&#39;'); // Substitui ' por &#39;
+        }
+        // Função para converter quebras de linha em <br>
+        function converterQuebrasDeLinha(texto) {
+            return texto.replace(/\n/g, '<br>');
+        }
+
+
+
+        function gerarPlano() {
+            const escola = document.getElementById('escola').value;
+            const data = document.getElementById('data').value;
+            const nome = document.getElementById('nome').value;
+            const disciplinaSelect = document.querySelector('select[name="disciplina"]');
+            const classeSelect = document.querySelector('select[name="classe"]');
+            const disciplina = disciplinaSelect.value;
+            const classe = classeSelect.value;
+            const turma = document.getElementById('turma').value;
+            const unidadeTematica = document.getElementById('unidadeTematica').value;
+            const tema = document.getElementById('tema').value;
+            const tempo = document.getElementById('tempo').value;
+            const duracao = document.getElementById('duracao').value;
+            const tipoDeAula = document.getElementById('tipoDeAula').value;
+            const conteudoMediacao = document.getElementById('conteudoMediacao').value;
+            const conteudoDominio = document.getElementById('conteudoDominio').value;
+            const conteudoControle = document.getElementById('conteudoControle').value;
+            const materialIntroducao = document.getElementById('materialIntroducao').value;
+            const materialMediacao = document.getElementById('materialMediacao').value;
+            const materialDominio = document.getElementById('materialDominio').value;
+            const materialControlo = document.getElementById('materialControlo').value;
+            const Obs1 = document.getElementById('Obs1').value;
+            const Obs2 = document.getElementById('Obs2').value;
+            const Obs3 = document.getElementById('Obs3').value;
+            const Obs4 = document.getElementById('Obs4').value;
+            const duracao1 = document.getElementById('duracao1').value;
+            const duracao2 = document.getElementById('duracao2').value;
+            const duracao3 = document.getElementById('duracao3').value;
+            const duracao4 = document.getElementById('duracao4').value;
+            const transversal = document.getElementById('transversal').value;
+            const subtemas = document.getElementById('subtemas').value;
+
+
+            // Coleta todos os objetivos específicos
+            const objetivosInputs = document.querySelectorAll('input[name="objetivoEspecifico"]');
+            let objetivosText = '';
+            objetivosInputs.forEach(input => {
+                if (input.value) {
+                    objetivosText += `<br> - ${input.value}`;
+                }
+            });
+
+            if (escola && data && nome && disciplina && classe && turma && unidadeTematica && tema && objetivosText && tempo && duracao && tipoDeAula && duracao1 && duracao2 && duracao3 && duracao4) {
+                document.getElementById('infoEscola').innerText = `${escola}`;
+                document.getElementById('infoData').innerText = `Data: ${data.replace(/(\d{4})-(\d{2})-(\d{2})/, '$3/$2/$1')}`;
+                document.getElementById('infoNome').innerText = `Nome: ${nome}, ${classe}, Turma: ${turma}`;
+                document.getElementById('infoDisciplina').innerText = `Disciplina: ${disciplina}.`;
+                document.getElementById('infoUnidadeTematica').innerText = `Unidade Temática: ${unidadeTematica}.`;
+                document.getElementById('infoTema').innerHTML = `Tema: <strong>${tema}</strong>.`;
+                document.getElementById('infoTransversal').innerHTML = `Tema transversal: <strong>${transversal}</strong>`;
+                document.getElementById('infoObjetivoEspecifico').innerHTML = `Objectivos Específicos: <strong>${objetivosText}</strong>.`;
+                document.getElementById('infoTempo').innerText = `Tempo: ${tempo}; Duração: ${duracao} minutos; Tipo de Aula: ${tipoDeAula}.`;
+
+                document.querySelector('.table-container').style.display = 'block';
+                document.getElementById('lessonPlanForm').style.display = 'none';
+                document.getElementById('infoContainer').style.display = 'flex';
+                document.getElementById('generatePDF').style.display = 'block'; // Mostrar o botão PDF
+
+                const table = document.getElementById('lessonPlanTable');
+                const rows = table.getElementsByTagName('tbody')[0].rows;
+
+                // Introdução e Motivação
+                rows[0].cells[1].innerHTML = `<div class="left-align">${duracao1}'</div>`;
+                rows[0].cells[2].innerHTML = `<div class="left-align">• Saudação;<br>• Controle de presenças;<br>• Recapitulação da aula anterior; <br>• Correção do TPC; <br>• Apresentação do tema; <br>• Apresentação dos objetivos da aula.</div>`;
+                rows[0].cells[3].innerHTML = `<div class="left-align">• Responde a saudação; <br>• Faz o controle de presenças;<br>• Indica um aluno para fazer a recapitulação da aula anterior e intervê caso necessário; <br>• Indica um aluno para fazer a correcção do TPC e intervê caso necessário;<br>• Apresenta o tema; <br>• Apresenta os objetivos da aula.</div>`;
+                rows[0].cells[4].innerHTML = `<div class="left-align">• Saudam; <br>• Respondem as presenças;<br>• Levanta-se o aluno indicado, faz a recapitulação e os outros prestam atenção; <br>• Levanta-se o aluno indicado, aprsenta o TPC e os outros ficam atentos; <br>• Prestam atenção na aprsentação do tema; <br>• Prestam atenção na apresentação dos objetivos da aula.</div>`;
+                rows[0].cells[5].innerHTML = `<div class="left-align">Elaboração Conjunta e Expositivo</div>`;
+
+                if (materialIntroducao.trim() !== '') {
+                    rows[0].cells[6].innerHTML = `<div class="left-align">Quadro, giz, apagador, livro do aluno, ${materialIntroducao}</div>`;
+                } else {
+                    rows[0].cells[6].innerHTML = `<div class="left-align">Quadro, giz, apagador e livro do aluno</div>`;
+                }
+
+                if (Obs1.trim() !== '') {
+                    rows[0].cells[7].innerHTML = `<div class="left-align">${Obs1}</div>`;
+                } else {
+                    rows[0].cells[7].innerHTML = `<div class="left-align"></div>`;
+                }
+
+                // Mediação e Assimilação
+                rows[1].cells[1].innerHTML = `<div class="left-align">${duracao2}'</div>`;
+
+                if (conteudoMediacao.trim() !== '') {
+                    rows[1].cells[2].innerHTML = `<div class="left-align"><strong>${tema}</strong>. <br><br>${converterQuebrasDeLinha(subtemas)};<br><br> N.B.: Veja os apontamentos na página ${conteudoMediacao}, no livro do aluno.</div>`;
+                } else {
+                    rows[1].cells[2].innerHTML = `<div class="left-align"><strong>${tema}</strong>. <br><br>${converterQuebrasDeLinha(subtemas)};<br><br> Apontamentos em anexo.</div>`;
+                }
+                // Função para converter quebras de linha em <br>
+                function converterQuebrasDeLinha(texto) {
+                    return texto.replace(/\n/g, '<br>');
+                }
+
+                rows[1].cells[3].innerHTML = `<div class="left-align">• Indica um aluno a cada vez para dizer os seus pontos de vista sobre o tema;<br>• Anota os pontos de vista dos alunos;<br>• Sistematiza as ideias dos alunos; <br>• Levanta as dúvidas;<br>•  Pede um aluno para esclarecer as dúvidas caso existam e intervê caso necessário; <br>• Dita os apontamentos.</div>`;
+                rows[1].cells[4].innerHTML = `<div class="left-align">• Levanta-se o aluno indicado, diz os seus pontos de vista e os outros anotam os pontos de vista;<br>• Prestam atenção na sistematização das ideias; <br>• Apresentam as dúvidas;<br>• Levanta-se o aluno voluntário, esclarece as dúvidas e os ourtos prestam atenção; <br>• Tomam notas dos apontamentos.</div>`;
+                rows[1].cells[5].innerHTML = `<div class="left-align">Elaboração Conjunta</div>`;
+
+                if (materialMediacao.trim() !== '') {
+                    rows[1].cells[6].innerHTML = `<div class="left-align">Quadro, giz, apagador, livro do aluno, ${materialMediacao}</div>`;
+                } else {
+                    rows[1].cells[6].innerHTML = `<div class="left-align">Quadro, giz, apagador e livro do aluno</div>`;
+                }
+
+                if (Obs2.trim() !== '') {
+                    rows[1].cells[7].innerHTML = `<div class="left-align">${Obs2}</div>`;
+                } else {
+                    rows[1].cells[7].innerHTML = `<div class="left-align"></div>`;
+                }
+
+                // Domínio e Consolidação
+                rows[2].cells[1].innerHTML = `<div class="left-align">${duracao3}'</div>`;
+                if (conteudoDominio.trim() !== '') {
+                    rows[2].cells[2].innerHTML = `<div class="left-align">• Exercícios  de aplicação. <br> ${conteudoDominio}.</div>`;
+                } else {
+                    rows[2].cells[2].innerHTML = `<div class="left-align">• Síntese da aula; <br><br> •Perguntas orais.</div>`;
+                }
+
+                if (conteudoDominio.trim() !== '') {
+                    rows[2].cells[3].innerHTML = `<div class="left-align">• Apresenta os exercícios; <br>• Orienta a resolução dos exercícios.</div>`;
+                } else {
+                    rows[2].cells[3].innerHTML = `<div class="left-align">• Indica um aluno para fazer a síntese e intervê caso necessário; <br> •Faz uma pergunta oral a cada vez aos alunos e indica um aluno para responder.</div>`;
+                }
+
+                if (conteudoDominio.trim() !== '') {
+                    rows[2].cells[4].innerHTML = `<div class="left-align">• Anota os exercícios no caderno; <br>• Resolve os exercícios no caderno.</div>`;
+                } else {
+                    rows[2].cells[4].innerHTML = `<div class="left-align">• Levanta-se o aluno indicado, faz a síntese e os outros prestam atenção; <br>• Levanta-se o aluno indicado, responde as questão e os outros escutam.</div>`;
+                }
+
+                rows[2].cells[5].innerHTML = `<div class="left-align">Elaboração Conjunta e Trabalho Independente</div>`;
+
+                if (materialDominio.trim() !== '') {
+                    rows[2].cells[6].innerHTML = `<div class="left-align">Quadro, giz, apagador, livro do aluno, ${materialDominio}</div>`;
+                } else {
+                    rows[2].cells[6].innerHTML = `<div class="left-align">Quadro, giz, apagador e livro do aluno</div>`;
+                }
+
+                if (Obs2.trim() !== '') {
+                    rows[1].cells[7].innerHTML = `<div class="left-align">${Obs2}</div>`;
+                } else {
+                    rows[1].cells[7].innerHTML = `<div class="left-align"></div>`;
+                }
+
+                if (Obs2.trim() !== '') {
+                    rows[1].cells[7].innerHTML = `<div class="left-align">${Obs2}</div>`;
+                } else {
+                    rows[1].cells[7].innerHTML = `<div class="left-align"></div>`;
+                }
+
+
+                if (Obs3.trim() !== '') {
+                    rows[2].cells[7].innerHTML = `<div class="left-align">${Obs3}</div>`;
+                } else {
+                    rows[2].cells[7].innerHTML = `<div class="left-align"></div>`;
+                }
+
+                // Controle e Avaliação
+                rows[3].cells[1].innerHTML = `<div class="left-align">${duracao4}'</div>`;
+
+                if (conteudoControle.trim() !== '') {
+                    rows[3].cells[2].innerHTML = `<div class="left-align">• Correção dos exercícios; <br>• Marcação do TPC <br>${conteudoControle}</div>`;
+                    rows[3].cells[3].innerHTML = `<div class="left-align">• Indica um aluno a cada vez para corrigir uma questão dos exercicios; <br>• Marca o TPC;</div>`;
+                    rows[3].cells[4].innerHTML = `<div class="left-align">• Levanta-se o aluno indicado e apresenta a correcção da questão indicada pelo professor enquantos outros acompanham; <br>• Anota o TPC.</div>`;
+                    rows[3].cells[5].innerHTML = `<div class="left-align">Elaboração Conjunta e Trabalho Independente</div>`;
+                } else {
+                    rows[3].cells[2].innerHTML = `<div class="left-align">• Correção dos exercícios; <br>• Considerações finais da aula</div>`;
+                    rows[3].cells[3].innerHTML = `<div class="left-align">• Indica um aluno a cada vez para corrigir uma questão dos exercicios; <br>• Dá as considerações finais;</div>`;
+                    rows[3].cells[4].innerHTML = `<div class="left-align">• Levanta-se o aluno indicado e apresenta a correcção da questão indicada pelo professor enquantos outros acompanham; <br>• Prestam atenção.</div>`;
+                    rows[3].cells[5].innerHTML = `<div class="left-align">Elaboração Conjunta</div>`;
+                }
+
+                if (materialControlo.trim() !== '') {
+                    rows[3].cells[6].innerHTML = `<div class="left-align">Quadro, giz, apagador, livro do aluno, ${materialControlo}</div>`;
+                } else {
+                    rows[3].cells[6].innerHTML = `<div class="left-align">Quadro, giz, apagador e livro do aluno</div>`;
+                }
+
+                if (Obs4.trim() !== '') {
+                    rows[3].cells[7].innerHTML = `<div class="left-align">${Obs4}</div>`;
+                } else {
+                    rows[3].cells[7].innerHTML = `<div class="left-align"></div>`;
+                }
+            } else {
+                alert('Por favor, preencha todos os campos obrigatorios.');
+            }
+        }
+
+
+
+        function salvarPDF() {
+            const element = document.getElementById('infoContainer'); // Elemento a ser convertido em PDF
+            const opt = {
+                margin: 1,
+                filename: 'plano_de_aula.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().from(element).set(opt).save();
+        }
+
+
+
+    </script>
+</body>
+</html>

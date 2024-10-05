@@ -4,12 +4,244 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat</title>
-    <link rel="stylesheet" href="chat.css">
-    <script type="module" src="chat.js"></script>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: white;
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+
+        #app {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background-color: rgba(255, 255, 255, 0);
+            border-radius: 5px;
+            backdrop-filter: blur(10px);
+            position: relative;
+            padding: 0;
+            margin: 0;
+        }
+
+        #chat-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-image: url('fundo.jfif');
+        }
+
+        #messages {
+            flex: 1;
+            overflow-y: scroll;
+            padding: 10px;
+            border-radius: 10px;
+            background-image: url('fundo.jfif');
+        }
+
+        .message {
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 80%;
+            position: relative;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sent {
+            background-color: #dcf8c6;
+            margin-left: auto;
+            text-align: left;
+        }
+
+        .received {
+            background-color: #ffffff;
+            border: 1px solid #dedede;
+            text-align: left;
+        }
+
+        .message-user {
+            font-weight: bold;
+            font-size: 0.9em;
+            text-align: left;
+        }
+
+        .message-time,
+        .message-date {
+            font-size: 0.8em;
+            color: gray;
+            text-align: right;
+            margin-top: 5px;
+        }
+
+        .input-container {
+            display: block;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        textarea {
+            width: 80%;
+            height: 15px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: none;
+        }
+
+        .send-icon {
+            width: 30px;
+            height: 35px;
+        }
+
+        .alert {
+            color: red;
+            margin: 20px;
+        }
+    </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, serverTimestamp, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCjR7ByKvIFDoF61CL5u2SmYjZ2SOqGd4I",
+            authDomain: "planoautomatico.firebaseapp.com",
+            projectId: "planoautomatico",
+            storageBucket: "planoautomatico.appspot.com",
+            messagingSenderId: "474178177133",
+            appId: "1:474178177133:web:452243accf7de0548b9764",
+            measurementId: "G-7GZFKCREKH"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const messagesDiv = document.getElementById('messages');
+        const messageInput = document.getElementById('message');
+        const sendIcon = document.getElementById('send-icon');
+
+        onAuthStateChanged(auth, async user => {
+            if (!user) {
+                window.location.href = "index.html";
+            } else {
+                const userName = await getUserName(user.email);
+                if (!userName) {
+                    alert('Você deve adicionar um nome antes de acessar o chat.');
+                    window.location.href = "nome.html"; // Redireciona para a página de adição de nome
+                } else {
+                    updateMessages();
+                }
+            }
+        });
+
+        function formatDate(timestamp) {
+            const date = new Date(timestamp.seconds * 1000);
+            return date.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp.seconds * 1000);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        async function getUserName(email) {
+            const userRef = collection(db, "users");
+            const userQuery = query(userRef, where("email", "==", email));
+            const userSnapshot = await getDocs(userQuery);
+
+            if (!userSnapshot.empty) {
+                const userDoc = userSnapshot.docs[0].data();
+                return userDoc.name || email.split('@')[0]; // Usa o nome ou o prefixo do email
+            }
+            return null; // Retorna null se não houver nome
+        }
+
+        async function updateMessages() {
+            const messagesRef = collection(db, "messages");
+            const q = query(messagesRef, orderBy("timestamp"));
+            onSnapshot(q, async snapshot => {
+                snapshot.docChanges().forEach(async (change) => {
+                    if (change.type === "added") {
+                        const msg = change.doc.data();
+                        if (msg.email && msg.text && msg.timestamp) { // Verifique se o timestamp está presente
+                            const userName = await getUserName(msg.email);
+                            const date = formatDate(msg.timestamp);
+                            const time = formatTime(msg.timestamp);
+
+                            // Cria div para a mensagem
+                            const msgDiv = document.createElement('div');
+                            msgDiv.className = `message ${msg.email === auth.currentUser.email ? 'sent' : 'received'}`;
+                            msgDiv.innerHTML = `
+                                <div class="message-user">${userName}</div>
+                                <div>${msg.text}</div>
+                                <div class="message-time">${time} | ${date}</div>
+                            `;
+                            messagesDiv.appendChild(msgDiv);
+                            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Rola para o final
+                        }
+                    }
+                });
+            });
+        }
+
+        sendIcon.onclick = async () => {
+            const message = messageInput.value.trim();
+            const user = auth.currentUser;
+
+            if (user) {
+                const userName = await getUserName(user.email);
+
+                if (!userName) {
+                    alert('Você deve adicionar um nome antes de enviar mensagens.NB: Escreve o nome completo, pois vai ser usado nos seus planos de aula.');
+                    window.location.href = "nome.html"; // Redireciona para a página de adição de nome
+                    return;
+                }
+
+                if (message) {
+                    const messageData = {
+                        text: message,
+                        email: user.email,
+                        timestamp: serverTimestamp(), // Apenas marca como timestamp
+                    };
+
+                    // Adiciona a mensagem ao Firestore
+                    const docRef = await addDoc(collection(db, "messages"), messageData);
+                    
+                    // Aguarda até que a mensagem tenha um timestamp atribuído
+                    const msgDoc = await getDoc(docRef); // Pega o documento recém-criado
+                    const msgData = msgDoc.data();
+
+                    if (msgData.timestamp) { // Verifique se o timestamp está definido
+                        // Exibe a mensagem imediatamente após ser enviada
+                        const currentTimestamp = msgData.timestamp;
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = 'message sent';
+                        msgDiv.innerHTML = `
+                            <div class="message-user">${userName}</div>
+                            <div>${message}</div>
+                            <div class="message-time">${formatTime(currentTimestamp)} | ${formatDate(currentTimestamp)}</div>
+                        `;
+                        messagesDiv.appendChild(msgDiv);
+                        messagesDiv.scrollTop = messagesDiv.scrollHeight; // Rola para o final
+                    }
+
+                    messageInput.value = ""; // Limpa o campo de entrada
+                }
+            }
+        };
+    </script>
 </head>
 <body>
     <div id="app">
-        <div id="response"></div>
         <div id="chat-section">
             <div id="messages"></div>
             <div class="input-container">
