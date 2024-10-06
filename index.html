@@ -73,6 +73,11 @@
         .mb-4 {
             color: #404EE5;
         }
+        .clickable-text {
+            color: #007bff;
+            cursor: pointer;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -91,18 +96,17 @@
             <a id="forgotPasswordBtn" class="btn btn-link text-dark my-link" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Esqueci minha senha</a>
             <div class="divider">ou</div>
             <button id="showRegisterBtn" class="btn btn-success btn-custom" onclick="showRegister()">Cadastre-se</button>
+            <button onclick="window.location.href = '6t.html';">Faca seu plano de teste</button>
         </div>
 
         <div id="registerForm" style="display: none;">
             <input type="email" class="form-control" id="registerEmail" placeholder="Crie o seu e-mail" required>
             <p id="registerEmailError" class="error-text" style="display: none;">Por favor, insira um e-mail válido.</p>
 
-            <input type="password" class="form-control" id="registerPassword" placeholder="Crie uma senha" required>
-            <p id="registerPasswordError" class="error-text" style="display: none;">A senha deve ter no mínimo 6 caracteres.</p>
-
             <button id="registerBtn" class="btn btn-primary btn-custom" onclick="register()">Cadastrar</button>
             <div class="divider">ou</div>
             <button id="showLoginBtn" class="btn btn-secondary btn-custom" onclick="showLogin()">Voltar ao Login</button>
+            <p class="clickable-text" onclick="sendPasswordReset()">Reenviar o link de definição da senha</p>
         </div>
     </div>
 
@@ -122,7 +126,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" id="sendResetEmailBtn" class="btn btn-primary">Enviar</button>
+                    <button type="button" id="sendResetEmailBtn" class="btn btn-primary" onclick="sendPasswordReset()">Enviar</button>
                 </div>
             </div>
         </div>
@@ -165,17 +169,31 @@
 
             window.register = async function() {
                 const email = document.getElementById('registerEmail').value;
-                const password = document.getElementById('registerPassword').value;
+                const defaultPassword = '163457'; // Senha padrão
 
                 try {
-                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, defaultPassword);
                     console.log('Usuário cadastrado:', userCredential.user.email);
-                    alert('Cadastro feito com sucesso!');
+                    alert('Cadastro feito com sucesso! Um link para definição de senha foi enviado no seu e-mail.');
+                    await sendPasswordResetEmail(auth, email);
                     resetForms();
                 } catch (error) {
                     console.error('Erro ao cadastrar:', error);
                     document.getElementById('registerEmailError').style.display = 'block';
-                    document.getElementById('registerPasswordError').style.display = 'block';
+                }
+            };
+
+            window.sendPasswordReset = async function() {
+                const email = document.getElementById('registerEmail').value || document.getElementById('resetEmail').value;
+                if (email) {
+                    try {
+                        await sendPasswordResetEmail(auth, email);
+                        alert('Email de redefinição enviado! Verifique sua caixa de entrada.');
+                    } catch (error) {
+                        alert('Erro ao enviar email: ' + error.message);
+                    }
+                } else {
+                    alert('Por favor, insira seu email.');
                 }
             };
 
@@ -191,28 +209,11 @@
                 document.getElementById('formTitle').innerText = 'Entrar';
             };
 
-            document.getElementById('sendResetEmailBtn').addEventListener('click', function() {
-                const email = document.getElementById('resetEmail').value;
-
-                if (email) {
-                    sendPasswordResetEmail(auth, email)
-                        .then(() => {
-                            alert('Email de recuperação enviado! Verifique sua caixa de entrada.');
-                            const forgotPasswordModal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
-                            forgotPasswordModal.hide();
-                        })
-                        .catch((error) => {
-                            alert('Erro ao enviar email de recuperação: ' + error.message);
-                        });
-                } else {
-                    alert('Por favor, insira seu email para recuperar a senha.');
-                }
-            });
+            document.getElementById('sendResetEmailBtn').addEventListener('click', sendPasswordReset);
         });
 
         function resetForms() {
             document.getElementById('registerEmail').value = '';
-            document.getElementById('registerPassword').value = '';
             document.getElementById('loginEmail').value = '';
             document.getElementById('loginPassword').value = '';
             document.getElementById('registerForm').style.display = 'none';
