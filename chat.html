@@ -50,6 +50,7 @@
             white-space: pre-wrap;
             display: flex;
             flex-direction: column;
+            position: relative; /* Para posicionar o ícone de remoção */
         }
 
         .sent {
@@ -75,6 +76,18 @@
             color: gray;
             text-align: right;
             margin-top: 5px;
+            display: flex;
+            align-items: center; /* Alinha o conteúdo ao centro verticalmente */
+            justify-content: space-between; /* Espaça os itens entre si */
+        }
+
+        .remove-icon {
+            font-size: 1.5em; /* Tamanho do "X" */
+            color: red; /* Cor do "X" */
+            cursor: pointer;
+            margin-left: 10px; /* Espaço entre a hora e o "X" */
+            font-weight: bold; /* Torna o "X" mais grosso */
+            line-height: 0; /* Remove altura extra */
         }
 
         .input-container {
@@ -117,7 +130,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, where, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, where, getDocs, deleteDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"; // Importando getDoc aqui
 
         const firebaseConfig = {
             apiKey: "AIzaSyCjR7ByKvIFDoF61CL5u2SmYjZ2SOqGd4I",
@@ -137,6 +150,9 @@
         const messageInput = document.getElementById('message');
         const sendIcon = document.getElementById('send-icon');
         const loadingDiv = document.getElementById('loading');
+
+        // Array para armazenar as mensagens
+        const messagesArray = [];
 
         onAuthStateChanged(auth, user => {
             if (!user) {
@@ -176,12 +192,16 @@
                 const userName = await getUserName(msg.email);
                 const time = msg.timestamp ? formatDate(msg.timestamp) : '';
 
+                // Armazena a mensagem no array
+                messagesArray.push({ id: doc.id, ...msg, userName: userName || 'Usuário Anônimo', time });
+
                 const msgDiv = document.createElement('div');
                 msgDiv.className = `message ${msg.email === auth.currentUser.email ? 'sent' : 'received'}`;
+                msgDiv.setAttribute('data-id', doc.id); // Atribui o ID da mensagem
                 msgDiv.innerHTML = `
                     <div class="message-user">${userName || 'Usuário Anônimo'}</div>
                     <div>${msg.text}</div>
-                    <div class="message-time">${time}</div>
+                    <div class="message-time">${time}<span class="remove-icon" style="display: ${msg.email === auth.currentUser.email ? 'inline' : 'none'};" onclick="removeMessage('${doc.id}', this)">X</span></div>
                 `;
                 fragment.appendChild(msgDiv);
             }
@@ -189,8 +209,26 @@
             messagesDiv.appendChild(fragment);
             messagesDiv.scrollTop = messagesDiv.scrollHeight; 
 
+            // Limite de mensagens a 20
+            await limitMessages();
+
             loadingDiv.style.display = 'none'; // Oculta o carregador
             sendIcon.style.display = 'block'; // Mostra o ícone de enviar
+        }
+
+        async function limitMessages() {
+            const messagesRef = collection(db, "messages");
+            const q = query(messagesRef, orderBy("timestamp"));
+
+            const snapshot = await getDocs(q);
+            if (snapshot.docs.length > 20) {
+                // Encontra as mensagens mais antigas para remover
+                const messagesToDelete = snapshot.docs.slice(0, snapshot.docs.length - 20);
+                const deletePromises = messagesToDelete.map(async (doc) => {
+                    await deleteDoc(doc.ref);
+                });
+                await Promise.all(deletePromises);
+            }
         }
 
         function listenForNewMessages() {
@@ -206,19 +244,38 @@
                         const userName = await getUserName(msg.email);
                         const time = msg.timestamp ? formatDate(msg.timestamp) : '';
 
+                        // Armazena a nova mensagem no array
+                        messagesArray.push({ id: change.doc.id, ...msg, userName: userName || 'Usuário Anônimo', time });
+
                         const msgDiv = document.createElement('div');
                         msgDiv.className = `message ${msg.email === auth.currentUser.email ? 'sent' : 'received'}`;
+                        msgDiv.setAttribute('data-id', change.doc.id); // Atribui o ID da mensagem
                         msgDiv.innerHTML = `
                             <div class="message-user">${userName || 'Usuário Anônimo'}</div>
                             <div>${msg.text}</div>
-                            <div class="message-time">${time}</div>
+                            <div class="message-time">${time}<span class="remove-icon" style="display: ${msg.email === auth.currentUser.email ? 'inline' : 'none'};" onclick="removeMessage('${change.doc.id}', this)">X</span></div>
                         `;
                         fragment.appendChild(msgDiv);
+                    } else if (change.type === "removed") {
+                        // Quando a mensagem é removida, remove-a da interface
+                        const msgDiv = document.querySelector(`.message[data-id='${change.doc.id}']`);
+                        if (msgDiv) {
+                            msgDiv.remove();
+                        }
+
+                        // Remove a mensagem do array
+                        const msgIndex = messagesArray.findIndex(msg => msg.id === change.doc.id);
+                        if (msgIndex !== -1) {
+                            messagesArray.splice(msgIndex, 1);
+                        }
                     }
                 }
 
                 messagesDiv.appendChild(fragment);
                 messagesDiv.scrollTop = messagesDiv.scrollHeight; 
+
+                // Limite de mensagens a 20
+                await limitMessages();
             });
         }
 
@@ -242,17 +299,44 @@
                     sendIcon.setAttribute('disabled', 'true');
 
                     // Envia a mensagem para o Firestore
-                    await addDoc(collection(db, "messages"), {
+                    const docRef = await addDoc(collection(db, "messages"), {
                         text: message,
                         email: user.email,
                         timestamp
                     });
+
+                    // Adiciona a nova mensagem ao array local
+                    messagesArray.push({ id: docRef.id, text: message, email: user.email, timestamp });
 
                     messageInput.value = ""; // Limpa a caixa de entrada
 
                     // Reabilita o botão após enviar a mensagem
                     sendIcon.classList.remove('disabled');
                     sendIcon.removeAttribute('disabled');
+
+                    // Limite de mensagens a 20
+                    await limitMessages();
+                }
+            }
+        };
+
+        window.removeMessage = async (id, element) => {
+            const user = auth.currentUser;
+            if (user) {
+                // Verifica se a mensagem pertence ao usuário
+                const msgRef = doc(db, "messages", id);
+                const msgSnapshot = await getDoc(msgRef);
+                if (msgSnapshot.exists() && msgSnapshot.data().email === user.email) {
+                    // Remove a mensagem do Firestore
+                    await deleteDoc(msgRef);
+
+                    // Remove a mensagem da interface imediatamente
+                    const msgDiv = element.closest('.message');
+                    if (msgDiv) {
+                        msgDiv.remove();
+                    }
+                } else {
+                    alert("Você não tem permissão para remover esta mensagem.");
                 }
             }
         };
@@ -264,7 +348,7 @@
             <div id="loading">Carregando mensagens, aguarde...</div>
             <div id="messages"></div>
             <div class="input-container">
-                <textarea id="message" placeholder="Digite sua mensagem"></textarea>
+                <textarea id="message" placeholder="Digite sua mensagem..."></textarea>
                 <img id="send-icon" class="send-icon" src="send.jpg" alt="Enviar">
             </div>
         </div>
