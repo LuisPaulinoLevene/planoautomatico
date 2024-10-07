@@ -9,7 +9,7 @@
             height: 100%;
             margin: 0;
             font-family: Arial, sans-serif;
-            background: white;
+            background-image: url('fundo.jfif');
             background-size: cover;
             background-repeat: no-repeat;
         }
@@ -18,12 +18,10 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            background-color: rgba(255, 255, 255, 0);
+            background-image: url('fundo.jfif');
             border-radius: 5px;
-            backdrop-filter: blur(10px);
             position: relative;
             padding: 0;
-            margin: 0;
         }
 
         #chat-section {
@@ -31,23 +29,20 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            background-image: url('fundo.jfif');
         }
 
         #messages {
             flex: 1;
             overflow-y: scroll;
             padding: 10px;
-            border-radius: 10px;
-            background-image: url('fundo.jfif');
+            background-color: transparent;
         }
 
         .message {
             margin: 5px 0;
             padding: 10px;
             border-radius: 10px;
-            max-width: 80%;
-            position: relative;
+            max-width: 75%;
             word-wrap: break-word;
             overflow-wrap: break-word;
             white-space: pre-wrap;
@@ -70,46 +65,44 @@
         .message-user {
             font-weight: bold;
             font-size: 0.9em;
-            text-align: left;
         }
 
         .message-time,
         .message-date {
-            font-size: 0.8em;
+            font-size: 0.7em;
             color: gray;
             text-align: right;
             margin-top: 5px;
         }
 
         .input-container {
-            display: block;
-            margin-top: 20px;
-            width: 100%;
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-top: 1px solid #ccc;
+            background-color: #fff;
         }
 
         textarea {
-            width: 80%;
-            height: 15px;
+            flex: 1;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
             resize: none;
+            height: 40px;
         }
 
         .send-icon {
             width: 30px;
-            height: 35px;
-        }
-
-        .alert {
-            color: red;
-            margin: 20px;
+            height: 30px;
+            margin-left: 10px;
+            cursor: pointer;
         }
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, serverTimestamp, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, where, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCjR7ByKvIFDoF61CL5u2SmYjZ2SOqGd4I",
@@ -128,18 +121,13 @@
         const messagesDiv = document.getElementById('messages');
         const messageInput = document.getElementById('message');
         const sendIcon = document.getElementById('send-icon');
+        const displayedMessages = new Set(); // Para evitar mensagens duplicadas
 
-        onAuthStateChanged(auth, async user => {
+        onAuthStateChanged(auth, user => {
             if (!user) {
                 window.location.href = "index.html";
             } else {
-                const userName = await getUserName(user.email);
-                if (!userName) {
-                    alert('Você deve adicionar um nome antes de acessar o chat.');
-                    window.location.href = "nome.html"; // Redireciona para a página de adição de nome
-                } else {
-                    updateMessages();
-                }
+                updateMessages();
             }
         });
 
@@ -160,82 +148,70 @@
 
             if (!userSnapshot.empty) {
                 const userDoc = userSnapshot.docs[0].data();
-                return userDoc.name || email.split('@')[0]; // Usa o nome ou o prefixo do email
+                return userDoc.name || email.split('@')[0]; // Retorna o nome ou o email
             }
-            return null; // Retorna null se não houver nome
+            return email.split('@')[0]; // Retorna o email se não houver nome
         }
 
-        async function updateMessages() {
+        function updateMessages() {
             const messagesRef = collection(db, "messages");
             const q = query(messagesRef, orderBy("timestamp"));
+
             onSnapshot(q, async snapshot => {
                 snapshot.docChanges().forEach(async (change) => {
                     if (change.type === "added") {
                         const msg = change.doc.data();
-                        if (msg.email && msg.text && msg.timestamp) { // Verifique se o timestamp está presente
-                            const userName = await getUserName(msg.email);
-                            const date = formatDate(msg.timestamp);
-                            const time = formatTime(msg.timestamp);
+                        const msgId = change.doc.id; // Obtém o ID do documento
 
-                            // Cria div para a mensagem
-                            const msgDiv = document.createElement('div');
-                            msgDiv.className = `message ${msg.email === auth.currentUser.email ? 'sent' : 'received'}`;
-                            msgDiv.innerHTML = `
-                                <div class="message-user">${userName}</div>
-                                <div>${msg.text}</div>
-                                <div class="message-time">${time} | ${date}</div>
-                            `;
-                            messagesDiv.appendChild(msgDiv);
-                            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Rola para o final
+                        // Verifica se a mensagem já foi exibida
+                        if (!displayedMessages.has(msgId)) {
+                            displayedMessages.add(msgId); // Marca a mensagem como exibida
+                            if (msg.email && msg.text) {
+                                const userName = await getUserName(msg.email);
+                                const date = msg.timestamp ? formatDate(msg.timestamp) : '';
+                                const time = msg.timestamp ? formatTime(msg.timestamp) : '';
+
+                                // Cria o elemento de mensagem
+                                const msgDiv = document.createElement('div');
+                                msgDiv.className = `message ${msg.email === auth.currentUser.email ? 'sent' : 'received'}`;
+                                msgDiv.innerHTML = `
+                                    <div class="message-user">${userName}</div>
+                                    <div>${msg.text}</div>
+                                    <div class="message-time">${time}</div>
+                                    <div class="message-date">${date}</div>
+                                `;
+                                messagesDiv.appendChild(msgDiv);
+                            }
                         }
                     }
                 });
+                messagesDiv.scrollTop = messagesDiv.scrollHeight; // Rola para o final
             });
         }
 
         sendIcon.onclick = async () => {
-            const message = messageInput.value.trim();
             const user = auth.currentUser;
+            const userName = await getUserName(user.email); // Obtém o nome do usuário
 
-            if (user) {
-                const userName = await getUserName(user.email);
+            // Verifica se o usuário não tem nome definido
+            if (!userName || userName === user.email.split('@')[0]) {
+                alert("Por favor, adicione seu nome antes de enviar uma mensagem.");
+                window.location.href = "nome.html"; // Redireciona para a página de nome
+                return;
+            }
 
-                if (!userName) {
-                    alert('Você deve adicionar um nome antes de enviar mensagens.NB: Escreve o nome completo, pois vai ser usado nos seus planos de aula.');
-                    window.location.href = "nome.html"; // Redireciona para a página de adição de nome
-                    return;
-                }
+            const message = messageInput.value.trim();
+            if (user && message) {
+                const timestamp = { seconds: Math.floor(Date.now() / 1000) }; // Usando o horário atual
+                const messageData = {
+                    text: message,
+                    email: user.email,
+                    timestamp: timestamp,
+                };
 
-                if (message) {
-                    const messageData = {
-                        text: message,
-                        email: user.email,
-                        timestamp: serverTimestamp(), // Apenas marca como timestamp
-                    };
-
-                    // Adiciona a mensagem ao Firestore
-                    const docRef = await addDoc(collection(db, "messages"), messageData);
-                    
-                    // Aguarda até que a mensagem tenha um timestamp atribuído
-                    const msgDoc = await getDoc(docRef); // Pega o documento recém-criado
-                    const msgData = msgDoc.data();
-
-                    if (msgData.timestamp) { // Verifique se o timestamp está definido
-                        // Exibe a mensagem imediatamente após ser enviada
-                        const currentTimestamp = msgData.timestamp;
-                        const msgDiv = document.createElement('div');
-                        msgDiv.className = 'message sent';
-                        msgDiv.innerHTML = `
-                            <div class="message-user">${userName}</div>
-                            <div>${message}</div>
-                            <div class="message-time">${formatTime(currentTimestamp)} | ${formatDate(currentTimestamp)}</div>
-                        `;
-                        messagesDiv.appendChild(msgDiv);
-                        messagesDiv.scrollTop = messagesDiv.scrollHeight; // Rola para o final
-                    }
-
-                    messageInput.value = ""; // Limpa o campo de entrada
-                }
+                // Envia a mensagem para o Firestore
+                await addDoc(collection(db, "messages"), messageData);
+                messageInput.value = ""; // Limpa a caixa de entrada
             }
         };
     </script>
@@ -245,7 +221,7 @@
         <div id="chat-section">
             <div id="messages"></div>
             <div class="input-container">
-                <textarea id="message" dir="ltr" placeholder="Digite sua mensagem"></textarea>
+                <textarea id="message" placeholder="Digite sua mensagem"></textarea>
                 <img id="send-icon" class="send-icon" src="send.jpg" alt="Enviar">
             </div>
         </div>
