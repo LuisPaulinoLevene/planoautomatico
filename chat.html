@@ -17,8 +17,8 @@
         #app {
             height: 100%;
             display: flex;
-            flex-direction: column;
             background-image: url('fundo.jfif');
+            flex-direction: column;
             border-radius: 5px;
             position: relative;
             padding: 0;
@@ -36,10 +36,12 @@
             overflow-y: scroll;
             padding: 10px;
             background-color: transparent;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .message {
-            margin: 5px 0;
             padding: 10px;
             border-radius: 10px;
             max-width: 75%;
@@ -52,13 +54,14 @@
 
         .sent {
             background-color: #dcf8c6;
-            margin-left: auto;
+            align-self: flex-end;
             text-align: left;
         }
 
         .received {
             background-color: #ffffff;
             border: 1px solid #dedede;
+            align-self: flex-start;
             text-align: left;
         }
 
@@ -67,8 +70,7 @@
             font-size: 0.9em;
         }
 
-        .message-time,
-        .message-date {
+        .message-time {
             font-size: 0.7em;
             color: gray;
             text-align: right;
@@ -98,6 +100,11 @@
             margin-left: 10px;
             cursor: pointer;
         }
+
+        .disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
@@ -121,24 +128,20 @@
         const messagesDiv = document.getElementById('messages');
         const messageInput = document.getElementById('message');
         const sendIcon = document.getElementById('send-icon');
-        const displayedMessages = new Set(); // Para evitar mensagens duplicadas
 
         onAuthStateChanged(auth, user => {
             if (!user) {
                 window.location.href = "index.html";
             } else {
-                updateMessages();
+                loadMessages();
+                listenForNewMessages();
             }
         });
 
         function formatDate(timestamp) {
             const date = new Date(timestamp.seconds * 1000);
-            return date.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' });
-        }
-
-        function formatTime(timestamp) {
-            const date = new Date(timestamp.seconds * 1000);
-            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false };
+            return date.toLocaleString('pt-BR', options);
         }
 
         async function getUserName(email) {
@@ -146,46 +149,61 @@
             const userQuery = query(userRef, where("email", "==", email));
             const userSnapshot = await getDocs(userQuery);
 
-            if (!userSnapshot.empty) {
-                const userDoc = userSnapshot.docs[0].data();
-                return userDoc.name || email.split('@')[0];
-            }
-            return email.split('@')[0];
+            return userSnapshot.empty ? null : userSnapshot.docs[0].data().name || null;
         }
 
-        function updateMessages() {
+        async function loadMessages() {
+            const messagesRef = collection(db, "messages");
+            const q = query(messagesRef, orderBy("timestamp"));
+
+            const snapshot = await getDocs(q);
+            const fragment = document.createDocumentFragment();
+
+            for (const doc of snapshot.docs) {
+                const msg = doc.data();
+                const userName = await getUserName(msg.email);
+                const time = msg.timestamp ? formatDate(msg.timestamp) : '';
+
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `message ${msg.email === auth.currentUser.email ? 'sent' : 'received'}`;
+                msgDiv.innerHTML = `
+                    <div class="message-user">${userName || 'Usuário Anônimo'}</div>
+                    <div>${msg.text}</div>
+                    <div class="message-time">${time}</div>
+                `;
+                fragment.appendChild(msgDiv);
+            }
+
+            messagesDiv.appendChild(fragment);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; 
+        }
+
+        function listenForNewMessages() {
             const messagesRef = collection(db, "messages");
             const q = query(messagesRef, orderBy("timestamp"));
 
             onSnapshot(q, async snapshot => {
-                snapshot.docChanges().forEach(async (change) => {
+                const fragment = document.createDocumentFragment();
+
+                for (const change of snapshot.docChanges()) {
                     if (change.type === "added") {
                         const msg = change.doc.data();
-                        const msgId = change.doc.id; // Obtém o ID do documento
+                        const userName = await getUserName(msg.email);
+                        const time = msg.timestamp ? formatDate(msg.timestamp) : '';
 
-                        // Verifica se a mensagem já foi exibida
-                        if (!displayedMessages.has(msgId)) {
-                            displayedMessages.add(msgId); // Marca a mensagem como exibida
-                            if (msg.email && msg.text) {
-                                const userName = await getUserName(msg.email);
-                                const date = msg.timestamp ? formatDate(msg.timestamp) : '';
-                                const time = msg.timestamp ? formatTime(msg.timestamp) : '';
-
-                                // Cria o elemento de mensagem
-                                const msgDiv = document.createElement('div');
-                                msgDiv.className = `message ${msg.email === auth.currentUser.email ? 'sent' : 'received'}`;
-                                msgDiv.innerHTML = `
-                                    <div class="message-user">${userName}</div>
-                                    <div>${msg.text}</div>
-                                    <div class="message-time">${time}</div>
-                                    <div class="message-date">${date}</div>
-                                `;
-                                messagesDiv.appendChild(msgDiv);
-                            }
-                        }
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = `message ${msg.email === auth.currentUser.email ? 'sent' : 'received'}`;
+                        msgDiv.innerHTML = `
+                            <div class="message-user">${userName || 'Usuário Anônimo'}</div>
+                            <div>${msg.text}</div>
+                            <div class="message-time">${time}</div>
+                        `;
+                        fragment.appendChild(msgDiv);
                     }
-                });
-                messagesDiv.scrollTop = messagesDiv.scrollHeight; // Rola para o final
+                }
+
+                messagesDiv.appendChild(fragment);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight; 
             });
         }
 
@@ -193,17 +211,34 @@
             const message = messageInput.value.trim();
             const user = auth.currentUser;
 
-            if (user && message) {
-                const timestamp = { seconds: Math.floor(Date.now() / 1000) }; // Usando o horário atual
-                const messageData = {
-                    text: message,
-                    email: user.email,
-                    timestamp: timestamp,
-                };
+            if (user) {
+                const userName = await getUserName(user.email);
+                if (!userName) {
+                    alert("Por favor, adicione seu nome antes de enviar mensagens.");
+                    window.location.href = "nome.html"; // Redireciona para a página de nome
+                    return;
+                }
 
-                // Envia a mensagem para o Firestore
-                await addDoc(collection(db, "messages"), messageData);
-                messageInput.value = ""; // Limpa a caixa de entrada
+                if (message) {
+                    const timestamp = { seconds: Math.floor(Date.now() / 1000) };
+
+                    // Desabilita o botão de enviar
+                    sendIcon.classList.add('disabled');
+                    sendIcon.setAttribute('disabled', 'true');
+
+                    // Envia a mensagem para o Firestore
+                    await addDoc(collection(db, "messages"), {
+                        text: message,
+                        email: user.email,
+                        timestamp
+                    });
+
+                    messageInput.value = ""; // Limpa a caixa de entrada
+
+                    // Reabilita o botão após enviar a mensagem
+                    sendIcon.classList.remove('disabled');
+                    sendIcon.removeAttribute('disabled');
+                }
             }
         };
     </script>
