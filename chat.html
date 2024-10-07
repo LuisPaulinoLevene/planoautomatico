@@ -148,9 +148,9 @@
 
             if (!userSnapshot.empty) {
                 const userDoc = userSnapshot.docs[0].data();
-                return userDoc.name || email.split('@')[0]; // Retorna o nome ou o email
+                return userDoc.name || email.split('@')[0];
             }
-            return email.split('@')[0]; // Retorna o email se não houver nome
+            return email.split('@')[0];
         }
 
         function updateMessages() {
@@ -190,17 +190,9 @@
         }
 
         sendIcon.onclick = async () => {
-            const user = auth.currentUser;
-            const userName = await getUserName(user.email); // Obtém o nome do usuário
-
-            // Verifica se o usuário não tem nome definido
-            if (!userName || userName === user.email.split('@')[0]) {
-                alert("Por favor, adicione seu nome antes de enviar uma mensagem.");
-                window.location.href = "nome.html"; // Redireciona para a página de nome
-                return;
-            }
-
             const message = messageInput.value.trim();
+            const user = auth.currentUser;
+
             if (user && message) {
                 const timestamp = { seconds: Math.floor(Date.now() / 1000) }; // Usando o horário atual
                 const messageData = {
