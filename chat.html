@@ -105,6 +105,14 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+
+        #loading {
+            display: none;
+            text-align: center;
+            margin: 10px;
+            font-weight: bold;
+            color: #666;
+        }
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
@@ -128,6 +136,7 @@
         const messagesDiv = document.getElementById('messages');
         const messageInput = document.getElementById('message');
         const sendIcon = document.getElementById('send-icon');
+        const loadingDiv = document.getElementById('loading');
 
         onAuthStateChanged(auth, user => {
             if (!user) {
@@ -153,6 +162,9 @@
         }
 
         async function loadMessages() {
+            loadingDiv.style.display = 'block'; // Mostra o carregador
+            sendIcon.style.display = 'none'; // Oculta o ícone de enviar
+
             const messagesRef = collection(db, "messages");
             const q = query(messagesRef, orderBy("timestamp"));
 
@@ -176,6 +188,9 @@
 
             messagesDiv.appendChild(fragment);
             messagesDiv.scrollTop = messagesDiv.scrollHeight; 
+
+            loadingDiv.style.display = 'none'; // Oculta o carregador
+            sendIcon.style.display = 'block'; // Mostra o ícone de enviar
         }
 
         function listenForNewMessages() {
@@ -246,6 +261,7 @@
 <body>
     <div id="app">
         <div id="chat-section">
+            <div id="loading">Carregando mensagens, aguarde...</div>
             <div id="messages"></div>
             <div class="input-container">
                 <textarea id="message" placeholder="Digite sua mensagem"></textarea>
