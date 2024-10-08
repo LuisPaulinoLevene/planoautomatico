@@ -87,21 +87,21 @@
 
         <div id="loginForm">
             <input type="email" class="form-control" id="loginEmail" placeholder="Insira o seu e-mail" required>
-            <p id="loginEmailError" class="error-text" style="display: none;">Por favor, insira um e-mail válido.</p>
+            <p id="loginEmailError" class="error-text" style="display: none;">Por favor, confirma o seu e-mail ou cadastre-se.</p>
 
             <input type="password" class="form-control" id="loginPassword" placeholder="Insira a sua senha" required>
-            <p id="loginPasswordError" class="error-text" style="display: none;">Por favor, insira sua senha.</p>
+            <p id="loginPasswordError" class="error-text" style="display: none;">Por favor, confirma sua senha. Se voce cadastrou este e-mail, clica em "Esqueci minha senha para redefinir".</p>
 
             <button id="loginBtn" class="btn btn-primary btn-custom" onclick="login()">Login</button>
             <a id="forgotPasswordBtn" class="btn btn-link text-dark my-link" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Esqueci minha senha</a>
             <div class="divider">ou</div>
             <button id="showRegisterBtn" class="btn btn-success btn-custom" onclick="showRegister()">Cadastre-se</button>
-            <button onclick="window.location.href = '6t.html';">Faca seu plano de teste</button>
+            <button onclick="window.location.href = '6t.html';">Clica aqui e faca seu plano teste</button>
         </div>
 
         <div id="registerForm" style="display: none;">
             <input type="email" class="form-control" id="registerEmail" placeholder="Crie o seu e-mail" required>
-            <p id="registerEmailError" class="error-text" style="display: none;">'Por favor, o seu Email foi ja foi cadastrado com sucesso, falta definir a sua senha. Clica em "Reenviar o link de definicao de senha" e va imediatamente no seu aplicativo Gmail, abra o link azul que encontras dentro da mensagem, clica nele e definha a sua senha no minimo 6 digitos e clica em Save. NB: Apos ao clicar, se nao abrir um campo para digitar a senha, volte para reenviar o link aqui, porque o link expira quando demorar acessa-lo. Se fazer isso e nao conseguir contacte 863614176 para ser dado suporte.</p>
+            <p id="registerEmailError" class="error-text" style="display: none;">'Por favor, o seu e-mail foi ja foi cadastrado com sucesso, falta definir a sua senha. Clica em "Reenviar o link de definicao de senha" e va imediatamente no seu aplicativo Gmail, abra o link azul que encontras dentro da mensagem, clica nele e definha a sua senha no minimo 6 digitos e clica em Save. NB: Apos ao clicar, se nao abrir um campo para digitar a senha, volte para reenviar o link aqui, porque o link expira quando demorar acessa-lo. Se fazer isso e nao conseguir contacte 863614176 para ser dado suporte.</p>
 
             <button id="registerBtn" class="btn btn-primary btn-custom" onclick="register()">Cadastrar</button>
             <div class="divider">ou</div>
@@ -174,7 +174,7 @@
                 try {
                     const userCredential = await createUserWithEmailAndPassword(auth, email, defaultPassword);
                     console.log('Usuário cadastrado:', userCredential.user.email);
-                    alert('Cadastro feito com sucesso! Um link para definição de senha foi enviado no seu e-mail.');
+                    alert('Cadastro feito com sucesso! Um link para definição de senha foi enviado no seu e-mail. Por favor, verifique sua caixa de entrada no seu Gmail e clica nele para redefinir a sua senha. Se nao recebeu, clica em "Reenviar o link de definicao de senha" e va imediatamente no seu aplicativo Gmail, abra o link azul que encontras dentro da mensagem, clica nele e definha a sua senha no minimo 6 digitos e clica em Save. NB: Apos ao clicar o link, se nao abrir um campo para digitar a senha, volte para reenviar o link aqui, porque o link expira quando demorar acessa-lo. Se fazer isso e nao conseguir contacte 863614176 para ser dado suporte');
                     await sendPasswordResetEmail(auth, email);
                     resetForms();
                 } catch (error) {
@@ -188,7 +188,7 @@
                 if (email) {
                     try {
                         await sendPasswordResetEmail(auth, email);
-                        alert('Email de redefinição enviado! Verifique sua caixa de entrada.');
+                        alert('Um link de redefinição de senha foi enviado no seu e-mail! Verifique sua caixa de entrada para redefinir a senha.');
                     } catch (error) {
                         alert('Erro ao enviar email: ' + error.message);
                     }
